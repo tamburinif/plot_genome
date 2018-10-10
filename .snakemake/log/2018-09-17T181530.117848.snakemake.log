@@ -1,0 +1,19 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Unlimited resources: mem, time
+Job counts:
+	count	jobs
+	1	parse_clusters
+	1
+
+rule parse_clusters:
+    input: cdhit/all_samples.faa.clstr, prodigal/all_samples.gff
+    output: all_samples.genes
+    jobid: 0
+    resources: mem=1, time=1
+
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: /labs/asbhatt/fiona/tools/annotate_crassphage/.snakemake/log/2018-09-17T181530.117848.snakemake.log

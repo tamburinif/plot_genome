@@ -1,0 +1,4 @@
+ref: /home/tamburin/fiona/crassphage/ref/crassphage.fasta
+refname: NC_024711.1
+sample_dir: /home/tamburin/fiona/crassphage/bmt_crass_genomes/assembly_links/
+samples: samples.list
