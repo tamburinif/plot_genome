@@ -1,0 +1,20 @@
+name: annotate
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - blast
+  - snakemake=5.1.4
+  - samtools
+  - ncurses
+  - mummer
+  - seqtk
+  - cd-hit
+  - prodigal
+  - r-ggplot2
+  - r-gggenes
+  - r-ape
+  - r-RColorBrewer
+  - r-plyr
+  - r-dplyr
