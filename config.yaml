@@ -1,0 +1,4 @@
+ref: reference.fasta
+refname: reference
+sample_dir: /path/to/assemblies
+samples: samples.list

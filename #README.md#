@@ -1,9 +1,0 @@
-# plot_genome
-Identify open reading frames and plot orthologs between small genomes
-
-# Usage
-
-cat ../ref/crassphage.fasta crAss001.fasta > compare_crass2.fasta
-
-snakemake compare_crass2.genes -s ~/fiona/tools/annotate_crassphage/Snakefile --configfile config2.yaml
-
