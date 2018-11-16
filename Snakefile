@@ -235,4 +235,4 @@ rule parse_clusters:
 	# input: rules.parse_clusters.output
 	# output: "{name}.pdf".format(name = prefix)
 	# script:
-	# 	"plot_genes.R"
+	# 	"plotGenes.R"
