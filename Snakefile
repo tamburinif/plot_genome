@@ -26,6 +26,7 @@ except (IOError, OSError) as e:
 else:
 	f.close()
 
+# reference configuration
 ref = config['ref']
 refname = config['refname']
 
@@ -68,14 +69,14 @@ rule blast_all:
     shell:
         "touch {output}"
 
-rule all:
-    input: expand("crass_genomes/{sample}.crass.fasta", sample=samples)
-    output: "done"
-    resources:
-        mem=1,
-        time=1
-    shell:
-        "touch {output}"
+# rule all:
+#     input: expand("crass_genomes/{sample}.crass.fasta", sample=samples)
+#     output: "done"
+#     resources:
+#         mem=1,
+#         time=1
+#     shell:
+#         "touch {output}"
 
 # get a list of contigs over 200 bb that align to ref genome
 # changed - aligned length must be over 1kb
@@ -92,7 +93,7 @@ rule contig_list:
 		"awk '$5 > {params.min_length_bp} && $5/$4 > {params.min_p} {{print $1}}' \
 		{input} | sort -u > {output}"
 
-# extract sequences that align to ref genome
+# extract contigs that align to reference genome
 rule get_seqs:
     input:
         contigs=rules.contig_list.output,
@@ -116,7 +117,7 @@ rule nucmer:
 	shell:
 		"nucmer {input[0]} {input[1]} -p nucmer/{wildcards.sample}"
 
-# filter for primary alignments
+# filter nucmer output for primary alignments
 rule filter:
     input: rules.nucmer.output
     output: "nucmer/{sample}.filtered.delta"
@@ -126,6 +127,7 @@ rule filter:
     shell:
         "delta-filter -q {input} > {output}"
 
+# get nucmer coordinates to scaffold contigs
 rule show_coords:
     input: rules.filter.output
     output: "nucmer/{sample}.filtered.coords"
@@ -135,6 +137,7 @@ rule show_coords:
     shell:
         "show-coords -THrd {input} > {output}"
 
+# scaffold contigs
 rule scaffold_1:
 	input:
 		rules.show_coords.output
@@ -159,14 +162,6 @@ rule scaffold_2:
 					shell("samtools faidx --reverse-complement " \
 					"--mark-strand sign {i} {c} >> {o}".format(i=input[1], c=contig, o=output))
 
-# add Ns between contigs
-# rule stitch:
-# 	input: rules.scaffold_2.output
-# 	output: "scaffold/{sample}.fastaScaffold"
-# 	shell:
-# 		"echo '>{wildcards.sample}' > {output}; " \
-# 		"sed -E 's/^>.+/NNNNNNNNNN/g' {input} | sed '1d' >> {output}"
-
 # concatenate contigs
 rule stitch:
 	input: rules.scaffold_2.output
@@ -174,24 +169,16 @@ rule stitch:
 	shell:
 		"(grep -v '>' {input} | awk 'BEGIN {{ ORS=\"\"; print \">{wildcards.sample}\\n\" }} {{ print }}'; printf '\\n') > {output}"
 
-# rule stitch:
-# 	input: rules.scaffold_2.output
-# 	output: "scaffold/{sample}.fastaScaffold"
-# 	shell:
-# 		"echo '>{wildcards.sample}' > {output}; " \
-# 		"grep -v '>' {input} | sed '1d' >> {output}"
+# rule done:
+#     input: expand("scaffold/{sample}.fastaScaffold", sample=samples)
+#     output: "done"
+#     resources:
+#         mem=1,
+#         time=1
+#     shell:
+#         "touch {output}"
 
-# grep -v "^>" scaffold/A77.fastaScaffold | awk 'BEGIN { ORS=""; print ">Sequence_name\n" } { print }'; printf '\n'
-
-rule done:
-    input: expand("scaffold/{sample}.fastaScaffold", sample=samples)
-    output: "done"
-    resources:
-        mem=1,
-        time=1
-    shell:
-        "touch {output}"
-
+# combine all genomes into multifasta
 rule combine:
     input: expand("scaffold/{sample}.fastaScaffold", sample=samples)
     output: "{name}.fasta".format(name = prefix)
@@ -201,6 +188,7 @@ rule combine:
     shell:
         "cat " + ref + " {input} > {output}"
 
+# find genes in multifasta genomes
 rule prodigal:
 	input:
 		fasta=rules.combine.output,
@@ -215,6 +203,7 @@ rule prodigal:
 		"prodigal -a {output[0]} -f gff -o {output[1]} -i {input.fasta} -t {input.training}; "\
 		"sed -i 's/ /_/g' {output[0]}"
 
+# cluster protein sequences
 rule cdhit:
 	input: "prodigal/{name}.faa".format(name = prefix)
 	output:
@@ -229,6 +218,7 @@ rule cdhit:
 	shell:
 		"cd-hit -c {params.pid} -s {params.length} -d 0 -i {input} -o {output[1]}"
 
+# parse clusters into gff-like gene format
 rule parse_clusters:
     input:
         "cdhit/{name}.faa.clstr".format(name = prefix),
@@ -239,3 +229,10 @@ rule parse_clusters:
         time=1
     script:
         "parseClusters.py"
+
+# plot genomes, color by homolog
+# rule plot:
+	# input: rules.parse_clusters.output
+	# output: "{name}.pdf".format(name = prefix)
+	# script:
+	# 	"plot_genes.R"
