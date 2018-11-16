@@ -7,3 +7,4 @@ podoviridae.txt
 prodigal
 config_crass.yaml
 ._Snakefile
+.snakemake
