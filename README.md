@@ -8,9 +8,13 @@ Identify open reading frames and plot orthologs between small genomes
 ## Config file
 
   ref: reference.fasta
+  
   refname: reference
+  
   sample_dir: /path/to/assemblies
+  
   samples: samples.list
+  
 
 ## Usage
 
