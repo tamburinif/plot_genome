@@ -1,4 +1,15 @@
+# reference genome
 ref: reference.fasta
+
+# reference genome name if you want it to be something more informative than NCXXXXX
 refname: reference
+
+# path to assemblies -- change to raw reads
 sample_dir: /path/to/assemblies
+
+# change -- get this from input dir
 samples: samples.list
+
+# parameters for CDHIT clustering
+pid: 0.75
+length: 0.9

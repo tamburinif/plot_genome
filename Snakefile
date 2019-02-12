@@ -213,8 +213,8 @@ rule cdhit:
 		mem=8,
 		time=1
 	params:
-		pid=0.75,
-		length=0.9
+		pid=config['pid']
+		length=config['length']
 	shell:
 		"cd-hit -c {params.pid} -s {params.length} -d 0 -i {input} -o {output[1]}"
 
