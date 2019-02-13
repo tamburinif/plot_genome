@@ -4,31 +4,17 @@
 # Finds contigs aligning to a reference genome, uses nucmer to align/scaffold
 # contigs against the reference and rotate genome to same starting coordinates
 
-localrules: makeblastdb, contig_list, get_seqs, nucmer, filter, show_coords, scaffold_1, scaffold_2, stitch, done, combine
+localrules: makeblastdb, contig_list, get_seqs, nucmer, filter, show_coords, scaffold_1, scaffold_2, stitch, combine
 
-import subprocess
+import re, os
 
-##### prefix for output files #####
-if config['prefix'] is None:
-	prefix = "all_samples"
-else:
-	prefix = config['prefix']
+# get file names
+FILES = [f for f in os.listdir(config['assembly_dir']) if f.endswith(tuple(['.fa', '.fasta']))]
+SAMPLES = list(set([re.split('.fa|.fasta', i)[0] for i in FILES]))
 
-# read in list of samples
-samples = []
-try:
-	f = open(config['samples'])
-	for line in f:
-		sample = line.rstrip('\n')
-		samples += [sample]
-except (IOError, OSError) as e:
-	print("File {f} does not exist".format(f=config['samples']))
-else:
-	f.close()
 
-# reference configuration
-ref = config['ref']
-refname = config['refname']
+rule all:
+	input: "{name}.pdf".format(name = config['prefix'])
 
 # index blast database
 rule makeblastdb:
@@ -48,7 +34,7 @@ rule blast:
     input:
         ref=config['ref'],
         idx=rules.makeblastdb.output,
-        assembly=config['sample_dir'] + "{sample}.fasta"
+        assembly=config['assembly_dir'] + "{sample}.fasta"
     output: "blast/{sample}.blast.out"
 	resources:
 		mem=2,
@@ -61,7 +47,7 @@ rule blast:
 
 # aggregate rule to execute all blast searches
 rule blast_all:
-    input: expand("blast/{sample}.blast.out", sample=samples)
+    input: expand("blast/{sample}.blast.out", sample=SAMPLES)
     output: "blast_done"
     resources:
         mem=1,
@@ -69,17 +55,7 @@ rule blast_all:
     shell:
         "touch {output}"
 
-# rule all:
-#     input: expand("crass_genomes/{sample}.crass.fasta", sample=samples)
-#     output: "done"
-#     resources:
-#         mem=1,
-#         time=1
-#     shell:
-#         "touch {output}"
-
-# get a list of contigs over 200 bb that align to ref genome
-# changed - aligned length must be over 1kb
+# get a list of contigs over n bp that align to ref genome
 rule contig_list:
 	input: rules.blast.output
 	output: "contig_list/{sample}.crass.list"
@@ -87,7 +63,7 @@ rule contig_list:
 		mem=1,
 		time=1
 	params:
-		min_length_bp=200,
+		min_length_bp=config['min_len'],
 		min_p=0.1
 	shell:
 		"awk '$5 > {params.min_length_bp} && $5/$4 > {params.min_p} {{print $1}}' \
@@ -97,7 +73,7 @@ rule contig_list:
 rule get_seqs:
     input:
         contigs=rules.contig_list.output,
-        assembly=config['sample_dir'] + "{sample}.fasta"
+        assembly=config['assembly_dir'] + "{sample}.fasta"
     output: "crass_genomes/{sample}.crass.fasta"
     resources:
         mem=1,
@@ -108,7 +84,7 @@ rule get_seqs:
 # detect strand with mummer
 rule nucmer:
 	input:
-		ref,
+		config['ref'],
 		rules.get_seqs.output
 	output: "nucmer/{sample}.delta"
 	resources:
@@ -170,7 +146,7 @@ rule stitch:
 		"(grep -v '>' {input} | awk 'BEGIN {{ ORS=\"\"; print \">{wildcards.sample}\\n\" }} {{ print }}'; printf '\\n') > {output}"
 
 # rule done:
-#     input: expand("scaffold/{sample}.fastaScaffold", sample=samples)
+#     input: expand("scaffold/{sample}.fastaScaffold", sample=SAMPLES)
 #     output: "done"
 #     resources:
 #         mem=1,
@@ -180,13 +156,13 @@ rule stitch:
 
 # combine all genomes into multifasta
 rule combine:
-    input: expand("scaffold/{sample}.fastaScaffold", sample=samples)
-    output: "{name}.fasta".format(name = prefix)
+    input: expand("scaffold/{sample}.fastaScaffold", sample=SAMPLES)
+    output: "{name}.fasta".format(name = config['prefix'])
     resources:
         mem=1,
         time=1
     shell:
-        "cat " + ref + " {input} > {output}"
+        "cat " + config['ref'] + " {input} > {output}"
 
 # find genes in multifasta genomes
 rule prodigal:
@@ -194,8 +170,8 @@ rule prodigal:
 		fasta=rules.combine.output,
 		training=config['training_data']
 	output:
-		"prodigal/{name}.faa".format(name = prefix),
-		"prodigal/{name}.gff".format(name = prefix)
+		"prodigal/{name}.faa".format(name = config['prefix']),
+		"prodigal/{name}.gff".format(name = config['prefix'])
 	resources:
 		mem=8,
 		time=1
@@ -205,15 +181,15 @@ rule prodigal:
 
 # cluster protein sequences
 rule cdhit:
-	input: "prodigal/{name}.faa".format(name = prefix)
+	input: "prodigal/{name}.faa".format(name = config['prefix'])
 	output:
-		"cdhit/{name}.faa.clstr".format(name = prefix),
-		"cdhit/{name}.faa".format(name = prefix)
+		"cdhit/{name}.faa.clstr".format(name = config['prefix']),
+		"cdhit/{name}.faa".format(name = config['prefix'])
 	resources:
 		mem=8,
 		time=1
 	params:
-		pid=config['pid']
+		pid=config['pid'],
 		length=config['length']
 	shell:
 		"cd-hit -c {params.pid} -s {params.length} -d 0 -i {input} -o {output[1]}"
@@ -221,9 +197,9 @@ rule cdhit:
 # parse clusters into gff-like gene format
 rule parse_clusters:
     input:
-        "cdhit/{name}.faa.clstr".format(name = prefix),
-        "prodigal/{name}.gff".format(name = prefix),
-    output: "{name}.genes".format(name = prefix)
+        "cdhit/{name}.faa.clstr".format(name = config['prefix']),
+        "prodigal/{name}.gff".format(name = config['prefix']),
+    output: "{name}.genes".format(name = config['prefix'])
     resources:
         mem=1,
         time=1
@@ -231,8 +207,8 @@ rule parse_clusters:
         "parseClusters.py"
 
 # plot genomes, color by homolog
-# rule plot:
-	# input: rules.parse_clusters.output
-	# output: "{name}.pdf".format(name = prefix)
-	# script:
-	# 	"plotGenes.R"
+rule plot:
+	input: rules.parse_clusters.output
+	output: "{name}.pdf".format(name = config['prefix'])
+	script:
+		"scripts/plotGenes.R"

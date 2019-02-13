@@ -1,14 +1,23 @@
-# reference genome
-ref: reference.fasta
+# reference genome for blast alignment
+ref: /path/to/reference.fasta
 
 # reference genome name if you want it to be something more informative than NCXXXXX
-refname: reference
+# refname: reference
 
-# path to assemblies -- change to raw reads
+# prefix for output files:
+prefix: something
+
+# path to assemblies (.fasta or .fa)
 sample_dir: /path/to/assemblies
 
 # change -- get this from input dir
-samples: samples.list
+# samples: samples.list
+
+# min length of contigs to include in scaffold
+min_len: 200
+
+# prodigal training data
+training_data: /path/to/training_data
 
 # parameters for CDHIT clustering
 pid: 0.75

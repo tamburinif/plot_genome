@@ -1,18 +1,20 @@
+# input files
+# gff_file <- snakemake@input[[1]]
+# names_file <- snakemake@input[[2]]
+
 library(gggenes)
 library(ggplot2)
 library(RColorBrewer)
-library(ape)
 library(plyr)
 library(dplyr)
 
 # gggenes documentation
 # https://github.com/wilkox/gggenes
 
-# input files
+# input gff file
 gff_file <- snakemake@input[[1]]
-names_file <- snakemake@input[[2]]
 
-# read gff file
+# read input gff
 gff <- read.gff(gff_file)
 colnames(gff)[9] <- "gene"
 
@@ -21,8 +23,6 @@ colnames(gff)[9] <- "gene"
 
 # rename samples
 # gff$seqid <- names[match(gff$seqid, names$Sample), "Label"]
-# remove selected samples
-gff <- filter(gff, !seqid %in% c("263_M", "268_M", "NCS_022_Stool_maternal3_microbiome", "A77"))
 
 # add length column
 gff$length <- (gff$end - gff$start)
@@ -40,16 +40,6 @@ longest <- gff[rev(order(gff$length)),][1,"gene"]
 anchors <- filter(gff, gene == longest)
 anchors <- aggregate(start ~ seqid, data = anchors, min)
 ends <- aggregate(end ~ seqid, data = gff, max)
-
-# adjust start coordinates
-# gff$start <- ifelse(gff$start >= anchors[match(gff$seqid, anchors$seqid), "start"],
-#                     gff$start - anchors[match(gff$seqid, anchors$seqid), "start"],
-#                     gff$start + (ends[match(gff$seqid, anchors$seqid), "end"] - anchors[match(gff$seqid, anchors$seqid), "start"]))
-# 
-# # adjust end coordinates
-# gff$end <- ifelse(gff$end >= anchors[match(gff$seqid, anchors$seqid), "start"],
-#                   gff$end - anchors[match(gff$seqid, anchors$seqid), "start"],
-#                   gff$end + ends[match(gff$seqid, anchors$seqid), "end"] - anchors[match(gff$seqid, anchors$seqid), "start"])
 
 # fix strand
 gff$strand <- ifelse(gff$strand == '+', 1, 0)
@@ -115,4 +105,9 @@ ggplot2::ggplot(gff, ggplot2::aes(xmin = start, xmax = end, y = seqid, fill = ge
   xlab("Kilobases")
 
 # save plot
-ggsave(snakemake@output[[1]], device = "pdf", width = 16, height = 12, units = "in", useDingbats=FALSE)
+ggsave(snakemake@input[[1]], device = "pdf", width = 16, height = 12, units = "in", useDingbats=FALSE)
+
+# average number of genes
+# mean(count(gff, "seqid")$freq)
+
+

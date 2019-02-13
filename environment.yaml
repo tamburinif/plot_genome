@@ -1,0 +1,17 @@
+name: crassviz
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - blast
+  - snakemake
+  - samtools
+  - seqtk
+  - prodigal
+  - cd-hit
+  - r-ggplot2
+  - r-gggenes
+  - r-RColorBrewer
+  - r-plyr
+  - r-dplyr
