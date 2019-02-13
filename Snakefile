@@ -4,7 +4,7 @@
 # Finds contigs aligning to a reference genome, uses nucmer to align/scaffold
 # contigs against the reference and rotate genome to same starting coordinates
 
-localrules: makeblastdb, contig_list, get_seqs, nucmer, filter, show_coords, scaffold_1, scaffold_2, stitch, combine
+localrules: makeblastdb, contig_list, get_seqs, nucmer, filter, show_coords, scaffold_1, scaffold_2, stitch, combine, plot
 
 import re, os
 

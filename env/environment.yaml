@@ -1,20 +1,18 @@
-name: annotate
+name: crassviz
 channels:
   - bioconda
   - defaults
   - conda-forge
 dependencies:
   - blast
-  - snakemake=5.1.4
+  - snakemake
   - samtools
-  - ncurses
-  - mummer
   - seqtk
-  - cd-hit
   - prodigal
+  - cd-hit
+  - r-ape
   - r-ggplot2
   - r-gggenes
-  - r-ape
   - r-RColorBrewer
   - r-plyr
   - r-dplyr

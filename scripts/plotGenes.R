@@ -5,6 +5,7 @@
 library(gggenes)
 library(ggplot2)
 library(RColorBrewer)
+library(ape)
 library(plyr)
 library(dplyr)
 
@@ -105,7 +106,8 @@ ggplot2::ggplot(gff, ggplot2::aes(xmin = start, xmax = end, y = seqid, fill = ge
   xlab("Kilobases")
 
 # save plot
-ggsave(snakemake@input[[1]], device = "pdf", width = 16, height = 12, units = "in", useDingbats=FALSE)
+h <- length(unique(gff$seqid)) * 2
+ggsave(snakemake@output[[1]], device = "pdf", width = 16, height = h, units = "in", useDingbats=FALSE)
 
 # average number of genes
 # mean(count(gff, "seqid")$freq)
