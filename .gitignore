@@ -8,3 +8,5 @@ prodigal
 config_crass.yaml
 ._Snakefile
 .snakemake
+._.DS_Store
+.DS_Store
