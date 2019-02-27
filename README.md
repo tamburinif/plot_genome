@@ -6,7 +6,7 @@ Identify open reading frames and plot orthologs between small genomes
 3. Identify orthologous genes and plot genome
 
 ## Config file
-
+```
 # reference genome for blast alignment
 ref: /path/to/reference.fasta
 
@@ -26,7 +26,7 @@ training_data: /path/to/training_data
 # parameters for CDHIT clustering
 pid: 0.75
 length: 0.9
-  
+```
 
 ## Usage
 
